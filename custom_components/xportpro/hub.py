@@ -8,7 +8,9 @@ do userapp (motor.js):
   - getmodulesstatus uma vez ao conectar (a central aceita 1 a cada 5 s);
   - mdcmd_getmd em lotes de 12 linhas a cada 150 ms (o buffer da central é de ~5 KB);
   - a cada 60 s, mdcmd_getmd só dos módulos sem notícia há mais de 60 s: o xConfig cala os
-    avisos por ~5 s quando sincroniza, e uma mudança nessa janela se perde.
+    avisos por ~5 s quando sincroniza, e uma mudança nessa janela se perde;
+  - módulo que não responde (linha timeout) não bloqueia nada: fica sem leitura, e quem
+    usa decide o estado padrão depois da janela de leitura (READ_WINDOW_S).
 
 Sem dependência do Home Assistant.
 """
@@ -30,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 KEEPALIVE_S = 25
 RX_TIMEOUT_S = 90          # 3 keepalives sem eco: conexão morta
 RESWEEP_S = 60
+READ_WINDOW_S = 6         # RD_READ_MS do app: depois disso, quem não respondeu vale o padrão
 BATCH = 12
 BATCH_PAUSE_S = 0.15
 CONNECT_TIMEOUT_S = 10
@@ -46,6 +49,8 @@ class XPortHub:
         self.port = port
         self.index = index
         self.connected = False
+        self.settled = False          # a janela de leitura inicial já passou
+        self.device_entry_id: str | None = None   # o dispositivo da central no Home Assistant
         self._on_sync_counter = on_sync_counter
         self._writer: asyncio.StreamWriter | None = None
         self._task: asyncio.Task | None = None
@@ -55,7 +60,6 @@ class XPortHub:
         # ADDR -> { kind -> (fields, t), "bm": { par -> (fields, t) } }
         self._fb: dict[str, dict[str, Any]] = {}
         self._seen: dict[str, float] = {}
-        self._timeouts: set[str] = set()
         self._ac: dict[int, AcState] = {}
         # o que as plataformas criaram: o que não estiver aqui saiu do projeto e é removido
         self.unique_ids: set[str] = set()
@@ -104,7 +108,6 @@ class XPortHub:
                     sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self._writer = writer
             self._seen.clear()
-            self._timeouts.clear()
             self._set_connected(True)
             self._first.set()
             chores = asyncio.create_task(self._chores())
@@ -136,6 +139,10 @@ class XPortHub:
             await asyncio.sleep(1.2)
             await self._sweep(max_age=None)
             last_sweep = time.monotonic()
+            if not self.settled:
+                await asyncio.sleep(READ_WINDOW_S)
+                self.settled = True
+                self._notify_all()
             while True:
                 await asyncio.sleep(KEEPALIVE_S)
                 await self.send("KEEPALIVE_KEEPALIVE")
@@ -178,14 +185,12 @@ class XPortHub:
             else:
                 mod[k] = (f, now)
             self._seen[addr] = now
-            self._timeouts.discard(addr)
             self._notify(addr)
         elif k == "timeout" and len(f) > 1:
             addr = f[1].strip().upper()
+            # o módulo não respondeu à central: só adia o próximo pedido para a revisão de 60 s
             if addr in self._targets:
-                self._timeouts.add(addr)
                 self._seen[addr] = time.monotonic()
-                self._notify(addr)
         elif k == "setacmd":
             parsed = parse_setacmd(f)
             if parsed:
@@ -218,10 +223,6 @@ class XPortHub:
         v = value_from_line(best[0], best[1][0], b.ch)
         return None if v is None else (v, best[0])
 
-    def module_ok(self, addr: str) -> bool:
-        """False quando o módulo não respondeu à central (linha timeout)."""
-        return addr not in self._timeouts
-
     def ac_state(self, dev_id: int) -> AcState | None:
         return self._ac.get(dev_id)
 
@@ -244,6 +245,9 @@ class XPortHub:
             return
         self.connected = state
         _LOGGER.info("xPortPro %s: %s", self.host, "conectada" if state else "desconectada")
+        self._notify_all()
+
+    def _notify_all(self) -> None:
         for cbs in list(self._listeners.values()):
             for cb in list(cbs):
                 cb()

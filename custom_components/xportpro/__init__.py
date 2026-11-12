@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: XPortConfigEntry) -> boo
 
     entry.async_on_unload(cancel_pending)
 
-    dr.async_get(hass).async_get_or_create(
+    hub.device_entry_id = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, index.serial)},
         manufacturer=MANUFACTURER,
@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: XPortConfigEntry) -> boo
         serial_number=index.serial,
         sw_version=fw,
         configuration_url=f"http://{host}/",
-    )
+    ).id
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _remove_stale(hass, entry, hub)
     return True

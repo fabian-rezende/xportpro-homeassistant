@@ -53,6 +53,8 @@ class XPortLight(XPortEntity, LightEntity):
             return None
         if "brightness" in st:
             return st["brightness"]
+        if self._attr_color_mode == ColorMode.ONOFF:
+            return None
         return round(st["level"] * 255 / 100) if "level" in st else None
 
     @property
@@ -72,21 +74,26 @@ class XPortLight(XPortEntity, LightEntity):
                 lines.append(rgb_command(k.rgb, d, (r << 16) | (g << 8) | b, 0))
             if ATTR_EFFECT in kwargs and kwargs[ATTR_EFFECT] in EFFECTS:
                 lines.append(rgb_command(k.rgb, d, EFFECTS.index(kwargs[ATTR_EFFECT]) + 1, 2))
+            cur = self._state or {}
+            want = {"on": True, "brightness": cur.get("brightness") or 255, "rgb": kwargs.get(ATTR_RGB_COLOR, cur.get("rgb"))}
             if pct is not None or not lines or not self.is_on:
-                lines.append(rgb_command(k.rgb, d, 100 if pct is None else pct, 1))
-            await self._send(*lines)
+                gain = 100 if pct is None else pct
+                lines.append(rgb_command(k.rgb, d, gain, 1))
+                want["brightness"] = round(gain * 255 / 100)
+            await self._command(want, *lines)
         elif pct is not None and k.sl is not None:
-            await self._send(slider_command(k.sl, d, pct))
+            await self._command({"on": True, "level": pct}, slider_command(k.sl, d, pct))
         elif k.sw is not None:
-            await self._send(switch_command(k.sw, d, True))
+            await self._command({"on": True, "level": 100}, switch_command(k.sw, d, True))
         elif k.sl is not None:
-            await self._send(slider_command(k.sl, d, 100))
+            await self._command({"on": True, "level": 100}, slider_command(k.sl, d, 100))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         k, d = self._kind, self._dev
+        off = {"on": False, "level": 0}
         if self._is_rgb:
-            await self._send(rgb_command(k.rgb, d, 0, 1))
+            await self._command({"on": False, "brightness": 0, "rgb": (self._state or {}).get("rgb")}, rgb_command(k.rgb, d, 0, 1))
         elif k.sw is not None:
-            await self._send(switch_command(k.sw, d, False))
+            await self._command(off, switch_command(k.sw, d, False))
         elif k.sl is not None:
-            await self._send(slider_command(k.sl, d, 0))
+            await self._command(off, slider_command(k.sl, d, 0))

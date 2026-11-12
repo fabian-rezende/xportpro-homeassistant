@@ -40,7 +40,7 @@ async def main(host: str, seconds: float) -> None:
             print(f"  [{k.tipo:9}] {room} / {d.get('name')}: {describe(d, got[0], got[1])}  ({k.b.addr} ch {k.b.ch}, {got[1]})")
         else:
             sem += 1
-            print(f"  [{k.tipo:9}] {room} / {d.get('name')}: SEM LEITURA ({k.b.addr} ch {k.b.ch}, módulo ok={hub.module_ok(k.b.addr)})")
+            print(f"  [{k.tipo:9}] {room} / {d.get('name')}: SEM LEITURA ({k.b.addr} ch {k.b.ch})")
     print(f"com leitura: {ok}, sem leitura: {sem}, contador diferente do catálogo: {changes}")
     await hub.stop()
 

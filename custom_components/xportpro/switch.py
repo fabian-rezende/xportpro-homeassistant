@@ -27,9 +27,9 @@ class XPortSwitch(XPortEntity, SwitchEntity):
     async def _set(self, on: bool) -> None:
         k, d = self._kind, self._dev
         if k.sw is not None:
-            await self._send(switch_command(k.sw, d, on))
+            await self._command({"on": on}, switch_command(k.sw, d, on))
         elif k.sl is not None:
-            await self._send(slider_command(k.sl, d, 100 if on else 0))
+            await self._command({"on": on}, slider_command(k.sl, d, 100 if on else 0))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._set(True)
