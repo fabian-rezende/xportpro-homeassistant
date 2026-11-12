@@ -1,0 +1,25 @@
+{
+  "config": {
+    "flow_title": "xPortPro {name}",
+    "step": {
+      "user": {
+        "title": "xPortPro controller",
+        "description": "Enter the controller IP address on the local network.",
+        "data": { "host": "IP address", "port": "Port" }
+      },
+      "confirm": {
+        "title": "xPortPro controller found",
+        "description": "Add controller {name} ({host})?"
+      }
+    },
+    "error": {
+      "cannot_connect": "The controller did not answer at this address.",
+      "no_catalog": "The controller has no project catalog. Run Sincronizar from xConfig PRO."
+    },
+    "abort": {
+      "already_configured": "This controller is already configured.",
+      "cannot_connect": "The controller did not answer.",
+      "no_catalog": "The controller has no project catalog."
+    }
+  }
+}

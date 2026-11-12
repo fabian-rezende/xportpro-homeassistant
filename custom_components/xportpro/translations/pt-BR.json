@@ -1,0 +1,25 @@
+{
+  "config": {
+    "flow_title": "xPortPro {name}",
+    "step": {
+      "user": {
+        "title": "Central xPortPro",
+        "description": "Informe o endereço IP da central na rede local.",
+        "data": { "host": "Endereço IP", "port": "Porta" }
+      },
+      "confirm": {
+        "title": "Central xPortPro encontrada",
+        "description": "Adicionar a central {name} ({host})?"
+      }
+    },
+    "error": {
+      "cannot_connect": "A central não respondeu nesse endereço.",
+      "no_catalog": "A central está sem o catálogo do projeto. Faça um Sincronizar pelo xConfig PRO."
+    },
+    "abort": {
+      "already_configured": "Esta central já está configurada.",
+      "cannot_connect": "A central não respondeu.",
+      "no_catalog": "A central está sem o catálogo do projeto."
+    }
+  }
+}

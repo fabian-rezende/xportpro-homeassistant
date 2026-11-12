@@ -1,0 +1,13 @@
+{
+  "domain": "xportpro",
+  "name": "Controlart xPortPro",
+  "codeowners": ["@fabian-rezende"],
+  "config_flow": true,
+  "dhcp": [{ "hostname": "xportpro-*" }, { "registered_devices": true }],
+  "documentation": "https://github.com/fabian-rezende/xportpro-homeassistant",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/fabian-rezende/xportpro-homeassistant/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
