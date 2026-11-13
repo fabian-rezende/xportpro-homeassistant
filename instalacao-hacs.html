@@ -138,12 +138,13 @@ docker restart homeassistant</code></pre>
     <li>Abra <strong>Configurações → Dispositivos e serviços</strong>.</li>
     <li>Se a central aparecer em "Descobertos" como <strong>xPortPro</strong>, clique em <strong>Adicionar</strong>. A descoberta acontece quando a central pede endereço à rede, então pode demorar.</li>
     <li>Se não aparecer: <strong>Adicionar integração → Controlart xPortPro</strong>, digite o IP da central e mantenha a porta <code>4998</code>.</li>
-    <li>Os dispositivos e as cenas do projeto aparecem já separados por ambiente.</li>
+    <li>Todos os dispositivos e cenas cadastrados no projeto aparecem, com o mesmo nome do xConfig PRO. Cada ambiente do projeto vira uma área do Home Assistant, com os seus dispositivos.</li>
   </ol>
   <h3>O que é preciso na central</h3>
   <ul>
     <li>Estar na mesma rede do Home Assistant.</li>
-    <li>Ter o projeto sincronizado pelo xConfig PRO: a integração lê o catálogo da casa (<code>http://&lt;ip da central&gt;/appdata.json</code>), o mesmo do aplicativo do usuário.</li>
+    <li>Ter os dispositivos <strong>cadastrados no projeto</strong>, cada um no seu ambiente, e o projeto <strong>sincronizado</strong> pelo xConfig PRO: a integração lê o catálogo da casa (<code>http://&lt;ip da central&gt;/appdata.json</code>), o mesmo do aplicativo do usuário. Sem dispositivo cadastrado, nada aparece.</li>
+    <li>Relés que são luz na categoria <strong>Iluminação</strong> (os outros viram interruptor), ar-condicionado no <strong>Modo smart</strong> e controle de TV marcado <strong>como TV</strong>.</li>
     <li>IP fixo ou reservado no roteador é recomendável.</li>
   </ul>
   <p class="suave">Depois de um novo Sincronizar no xConfig PRO, a integração relê o catálogo sozinha em cerca de 20 segundos.</p>
